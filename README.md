@@ -1,6 +1,6 @@
 # Nestopia Vita
 
-A standalone NES emulator for PlayStation Vita, powered by the [Nestopia](https://github.com/Cpasjuste/nestopia) emulation core.
+A standalone NES emulator for PlayStation Vita, powered by the [Nestopia](https://github.com/cysin/nestopia) emulation core.
 
 ## Features
 
@@ -51,7 +51,7 @@ make -j$(nproc)
 
 ## Credits
 
-- [Nestopia UE](https://github.com/Cpasjuste/nestopia) - NES emulation core
+- [Nestopia UE](https://github.com/cysin/nestopia) - NES emulation core
 - [libcross2d](https://github.com/Cpasjuste/libcross2d) - Cross-platform 2D library
 - [pemu](https://github.com/Cpasjuste/pemu) - Portable emulator framework
 
