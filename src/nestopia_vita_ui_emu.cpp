@@ -297,7 +297,7 @@ void NestopiaVitaUiEmu::nestopia_config_init() {
     // Timing
     conf.timing_speed = 60;
     conf.timing_ffspeed = 3;
-    conf.timing_turbopulse = 3;
+    conf.timing_turbopulse = 1;
 
     // Misc
     conf.misc_default_system = 0;
