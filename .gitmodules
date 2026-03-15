@@ -4,4 +4,4 @@
 	branch = master
 [submodule "external/nestopia"]
 	path = external/nestopia
-	url = https://github.com/Cpasjuste/nestopia.git
+	url = https://github.com/cysin/nestopia.git

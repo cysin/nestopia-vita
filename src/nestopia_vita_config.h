@@ -8,11 +8,11 @@ public:
     NestopiaVitaConfig(c2d::Renderer *renderer, int version);
 
     std::string getCoreVersion() override {
-        return "Nestopia 1.52.0";
+        return "Nestopia JG 1.53.2";
     }
 
     std::vector<std::string> getCoreSupportedExt() override {
-        return {".zip", ".nes", ".nez", ".unf", ".unif"};
+        return {".zip", ".nes", ".nez", ".unf", ".unif", ".fds", ".nsf", ".xml", ".bin"};
     }
 };
 

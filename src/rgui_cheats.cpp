@@ -3,40 +3,17 @@
 //
 
 #include "rgui_cheats.h"
-#include "core/api/NstApiEmulator.hpp"
-#include "core/api/NstApiCheats.hpp"
+#include "nestopia_vita_ui_emu.h"
 #include <cstdio>
 #include <cstring>
 
 using namespace c2d;
-using namespace Nes::Api;
-
-extern Nes::Api::Emulator emulator;
 
 std::vector<NestopiaCheat> g_nestopia_cheats;
 
 namespace {
     void applyAllCheats() {
-        Cheats cheats(emulator);
-
-        // Remove all existing codes
-        while (cheats.NumCodes() > 0) {
-            cheats.DeleteCode(0);
-        }
-
-        // Apply enabled cheats
-        for (const auto &cheat : g_nestopia_cheats) {
-            if (!cheat.enabled) continue;
-
-            Cheats::Code code;
-            char characters[9];
-            strncpy(characters, cheat.gg_code.c_str(), sizeof(characters) - 1);
-            characters[sizeof(characters) - 1] = '\0';
-
-            if (cheats.GameGenieDecode(characters, code) == Nes::RESULT_OK) {
-                cheats.SetCode(code);
-            }
-        }
+        nestopia_apply_cheats();
     }
 }
 

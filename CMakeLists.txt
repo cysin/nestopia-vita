@@ -35,6 +35,7 @@ set(NESTOPIA_INC
         ${NESTOPIA_DIR}/source/core/board
         ${NESTOPIA_DIR}/source/core/input
         ${NESTOPIA_DIR}/source/core/vssystem
+        ${NESTOPIA_DIR}/source/fltkui
 )
 
 file(GLOB NESTOPIA_SRC
@@ -43,10 +44,7 @@ file(GLOB NESTOPIA_SRC
         ${NESTOPIA_DIR}/source/core/board/*.c*
         ${NESTOPIA_DIR}/source/core/input/*.c*
         ${NESTOPIA_DIR}/source/core/vssystem/*.c*
-        ${NESTOPIA_DIR}/source/fltkui/cheats.cpp
-        ${NESTOPIA_DIR}/source/fltkui/homebrew.cpp
-        ${NESTOPIA_DIR}/source/fltkui/samples.cpp
-        ${NESTOPIA_DIR}/source/fltkui/nstcommon.cpp
+        ${NESTOPIA_DIR}/source/fltkui/jg.cpp
 )
 # Remove expensive video filters not needed on Vita
 list(REMOVE_ITEM NESTOPIA_SRC
