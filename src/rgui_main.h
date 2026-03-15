@@ -63,6 +63,7 @@ private:
     void buildSettingsMenu();
     void handleMainAction(RguiMenu::Action action);
     void handleSettingsAction(RguiMenu::Action action);
+    void resumeGame();
     void cycleOption(int optId, int direction);
     std::string getOptionValue(int optId);
 
