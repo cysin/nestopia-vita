@@ -58,7 +58,7 @@ int NestopiaVitaUiEmu::load(const Game &game) {
         if (!nestopia_vita::load_error::has()) {
             nestopia_vita::load_error::set(
                     "Load Failed",
-                    "Nestopia could not load this ROM.",
+                    "Could not load ROM.",
                     game.path);
         }
         stop();
@@ -333,8 +333,9 @@ int NestopiaVitaUiEmu::nestopia_core_init(const char *rom_path) {
 
     nst_input_turbo_init();
 
-    // Set archive handler function pointer
+    // Set archive handler function pointer for ZIP/7z support
     nst_archive_select = &nst_archive_select_file;
+    printf("nestopia: archive handler set (libarchive)\n");
 
     // Set the video dimensions
     video_set_dimensions();

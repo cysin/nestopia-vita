@@ -103,6 +103,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE ${NESTOPIA_CFLAGS})
 target_link_libraries(${PROJECT_NAME} PRIVATE
         cross2dui cross2d
         ${LIBARCHIVE_LIBRARIES}
+        z bz2 zstd
         ScePower_stub pthread
 )
 
