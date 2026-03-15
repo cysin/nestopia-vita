@@ -1,0 +1,7 @@
+[submodule "external/libcross2d"]
+	path = external/libcross2d
+	url = https://github.com/Cpasjuste/libcross2d.git
+	branch = master
+[submodule "external/nestopia"]
+	path = external/nestopia
+	url = https://github.com/Cpasjuste/nestopia.git
