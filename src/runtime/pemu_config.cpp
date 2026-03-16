@@ -142,6 +142,7 @@ PEMUConfig::PEMUConfig(Renderer *renderer, const std::string &name, int version)
     joy_grp.addOption({"JOY_START", KEY_JOY_START_DEFAULT, JOY_START})->setFlags(INPUT);
     joy_grp.addOption({"JOY_MENU1", KEY_JOY_MENU1_DEFAULT, JOY_MENU1})->setFlags(INPUT);
     joy_grp.addOption({"JOY_MENU2", KEY_JOY_MENU2_DEFAULT, JOY_MENU2})->setFlags(INPUT);
+    joy_grp.addOption({"JOY_REWIND", KEY_JOY_LT_DEFAULT, JOY_REWIND})->setFlags(INPUT);
     joy_grp.addOption({"JOY_AXIS_LX", KEY_JOY_AXIS_LX, JOY_AXIS_LX})->setFlags(INPUT | HIDDEN);
     joy_grp.addOption({"JOY_AXIS_LY", KEY_JOY_AXIS_LY, JOY_AXIS_LY})->setFlags(INPUT | HIDDEN);
     joy_grp.addOption({"JOY_AXIS_RX", KEY_JOY_AXIS_RX, JOY_AXIS_RX})->setFlags(INPUT | HIDDEN);

@@ -16,6 +16,8 @@ public:
     int load(const pemu::Game &game) override;
 
     void stop() override;
+    void pause() override;
+    void resume() override;
 
     NestopiaVitaCoreBridge *getCore() const { return m_core.get(); }
 

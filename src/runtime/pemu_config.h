@@ -87,6 +87,7 @@ namespace pemu {
             JOY_START,
             JOY_MENU1,
             JOY_MENU2,
+            JOY_REWIND,
             JOY_AXIS_LX,
             JOY_AXIS_LY,
             JOY_AXIS_RX,

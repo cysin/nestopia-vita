@@ -164,6 +164,24 @@ void set_button(PortState &port, const char *name, bool pressed) {
     }
 }
 
+bool is_trigger_axis_binding(int value) {
+    return value == (SDL_CONTROLLER_AXIS_TRIGGERLEFT + 100) ||
+           value == (SDL_CONTROLLER_AXIS_TRIGGERRIGHT + 100);
+}
+
+bool is_raw_binding_pressed(const Input::Player &player, int binding) {
+    if (!player.data || binding == SDL_CONTROLLER_BUTTON_INVALID) {
+        return false;
+    }
+
+    auto *pad = static_cast<SDL_GameController *>(player.data);
+    if (is_trigger_axis_binding(binding)) {
+        return SDL_GameControllerGetAxis(pad, static_cast<SDL_GameControllerAxis>(binding - 100)) > player.dz;
+    }
+
+    return SDL_GameControllerGetButton(pad, static_cast<SDL_GameControllerButton>(binding)) > 0;
+}
+
 } // namespace
 
 struct NestopiaVitaCoreBridge::Impl {
@@ -183,6 +201,9 @@ struct NestopiaVitaCoreBridge::Impl {
     std::string last_error;
     int audio_rate = 48000;
     float target_fps = 60.0f;
+    int rewind_state = JG_REWIND_STOPPED;
+    bool rewind_requested = false;
+    bool rewind_blocked_until_release = true;
     bool initialized = false;
     bool loaded = false;
 
@@ -232,6 +253,65 @@ struct NestopiaVitaCoreBridge::Impl {
         }
     }
 
+    int get_rewind_binding() const {
+        auto *opt = emu->getUi()->getConfig()->get(PEMUConfig::OptId::JOY_REWIND, false);
+        return opt ? opt->getInteger() : KEY_JOY_LT_DEFAULT;
+    }
+
+    void on_rewind_state_changed(int state) {
+        rewind_state = state;
+        if (state == JG_REWIND_STOPPED) {
+            rewind_requested = false;
+        }
+    }
+
+    void configure_rewind() {
+        rewind_requested = false;
+        rewind_blocked_until_release = true;
+        rewind_state = JG_REWIND_STOPPED;
+        if (jg_rewind_enable(1)) {
+            jg_rewind_enable_sound(1);
+            printf("nestopia: rewind enabled\n");
+        } else {
+            printf("nestopia: rewind enable failed\n");
+        }
+    }
+
+    void set_rewind_active(bool active) {
+        if (!loaded) {
+            rewind_requested = false;
+            return;
+        }
+
+        if (active == rewind_requested && (active || rewind_state == JG_REWIND_STOPPED)) {
+            return;
+        }
+
+        if (jg_rewind_set_direction(active ? JG_REWIND_BACKWARD : JG_REWIND_FORWARD)) {
+            rewind_requested = active;
+        } else if (!active) {
+            rewind_requested = false;
+        }
+    }
+
+    void suspend_hotkeys_until_release() {
+        set_rewind_active(false);
+        rewind_blocked_until_release = true;
+    }
+
+    bool should_rewind(const Input::Player &player) {
+        bool pressed = is_raw_binding_pressed(player, get_rewind_binding());
+        if (rewind_blocked_until_release) {
+            if (!pressed) {
+                rewind_blocked_until_release = false;
+            }
+            pressed = false;
+        }
+
+        set_rewind_active(pressed);
+        return rewind_requested || rewind_state != JG_REWIND_STOPPED;
+    }
+
     bool reset_backend() {
         if (loaded) {
             jg_game_unload();
@@ -262,6 +342,7 @@ struct NestopiaVitaCoreBridge::Impl {
         jg_set_cb_audio(&Impl::audio_callback);
         jg_set_cb_frametime(&Impl::frametime_callback);
         jg_set_cb_log(&Impl::log_callback);
+        jg_set_cb_rewind(&Impl::rewind_callback);
 
         if (!jg_init()) {
             set_last_error("Failed to initialize Nestopia core.");
@@ -406,9 +487,12 @@ struct NestopiaVitaCoreBridge::Impl {
         }
 
         clear_inputs();
-        const size_t player_count = std::min(ports.size(), static_cast<size_t>(PLAYER_MAX));
-        for (size_t i = 0; i < player_count; ++i) {
-            push_pad_state(players[i], ports[i], turbo_counter);
+        const bool rewinding = players && should_rewind(players[0]);
+        if (!rewinding) {
+            const size_t player_count = std::min(ports.size(), static_cast<size_t>(PLAYER_MAX));
+            for (size_t i = 0; i < player_count; ++i) {
+                push_pad_state(players[i], ports[i], turbo_counter);
+            }
         }
 
         jg_exec_frame();
@@ -425,15 +509,34 @@ struct NestopiaVitaCoreBridge::Impl {
         }
     }
 
+    static void rewind_callback(int state) {
+        if (Impl *impl = active_impl()) {
+            impl->on_rewind_state_changed(state);
+        }
+    }
+
     static void audio_callback(size_t samples) {
         Impl *impl = active_impl();
         if (!impl || !impl->emu->getAudio() || impl->audio_buffer.empty()) {
             return;
         }
 
+        if (impl->rewind_state == JG_REWIND_PREPARING) {
+            return;
+        }
+
+        // Clamp to buffer capacity to prevent overread
+        const size_t max_samples = impl->audio_buffer.size() / 2;
+        if (samples > max_samples) {
+            samples = max_samples;
+        }
+
+        const Audio::SyncMode sync_mode =
+            (impl->rewind_state == JG_REWIND_STOPPED && impl->target_fps < 55.0f)
+                ? Audio::SyncMode::LowLatency
+                : Audio::SyncMode::None;
         impl->emu->getAudio()->play(impl->audio_buffer.data(), static_cast<int>(samples),
-                                    impl->target_fps < 55.0f ? Audio::SyncMode::LowLatency
-                                                             : Audio::SyncMode::None);
+                                    sync_mode);
     }
 
     static void log_callback(int level, const char *format, ...) {
@@ -503,6 +606,7 @@ int NestopiaVitaCoreBridge::load(const std::string &full_path) {
     jg_setup_video();
     m_impl->build_video_surface();
     m_impl->configure_audio();
+    m_impl->configure_rewind();
     return 0;
 }
 
@@ -511,8 +615,11 @@ void NestopiaVitaCoreBridge::unload() {
         return;
     }
 
+    m_impl->suspend_hotkeys_until_release();
+    m_impl->rewind_state = JG_REWIND_STOPPED;
     jg_game_unload();
     m_impl->loaded = false;
+    m_impl->rewind_requested = false;
     m_impl->game_data.clear();
     m_impl->ports.clear();
     m_impl->audio_buffer.clear();
@@ -538,6 +645,10 @@ int NestopiaVitaCoreBridge::loadState(const char *path) {
 
     const int result = jg_state_load(path);
     if (result == 1) {
+        jg_rewind_reset();
+        m_impl->rewind_requested = false;
+        m_impl->rewind_state = JG_REWIND_STOPPED;
+        m_impl->rewind_blocked_until_release = true;
         m_impl->upload_video_frame();
         return 0;
     }
@@ -555,6 +666,14 @@ void NestopiaVitaCoreBridge::applyCheats(const std::vector<NestopiaCheat> &cheat
             jg_cheat_set(cheat.gg_code.c_str());
         }
     }
+}
+
+void NestopiaVitaCoreBridge::suspendHotkeysUntilRelease() {
+    m_impl->suspend_hotkeys_until_release();
+}
+
+void NestopiaVitaCoreBridge::stopRewind() {
+    m_impl->set_rewind_active(false);
 }
 
 float NestopiaVitaCoreBridge::getTargetFps() const {

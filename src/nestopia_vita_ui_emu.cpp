@@ -71,6 +71,21 @@ void NestopiaVitaUiEmu::stop() {
     UiEmu::stop();
 }
 
+void NestopiaVitaUiEmu::pause() {
+    if (m_core) {
+        m_core->stopRewind();
+        m_core->suspendHotkeysUntilRelease();
+    }
+    UiEmu::pause();
+}
+
+void NestopiaVitaUiEmu::resume() {
+    if (m_core) {
+        m_core->suspendHotkeysUntilRelease();
+    }
+    UiEmu::resume();
+}
+
 extern RguiMain *g_rgui;
 
 bool NestopiaVitaUiEmu::onInput(c2d::Input::Player *players) {

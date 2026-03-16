@@ -18,6 +18,7 @@ namespace {
     constexpr HotkeyItem HOTKEY_ITEMS[] = {
         {PEMUConfig::OptId::JOY_MENU1, "Menu 1"},
         {PEMUConfig::OptId::JOY_MENU2, "Menu 2"},
+        {PEMUConfig::OptId::JOY_REWIND, "Rewind"},
     };
 }
 

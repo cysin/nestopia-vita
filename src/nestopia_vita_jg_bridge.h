@@ -23,6 +23,8 @@ public:
     int saveState(const char *path);
     int loadState(const char *path);
     void applyCheats(const std::vector<NestopiaCheat> &cheats);
+    void suspendHotkeysUntilRelease();
+    void stopRewind();
 
     float getTargetFps() const;
     bool isPal() const;
