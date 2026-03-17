@@ -402,14 +402,7 @@ struct NestopiaVitaCoreBridge::Impl {
     void clear_inputs() {
         for (PortState &port : ports) {
             std::fill(port.axes.begin(), port.axes.end(), 0);
-            // Preserve turbo button counters (managed by the core)
-            const int ta = find_button_index(port, "TurboA");
-            const int tb = find_button_index(port, "TurboB");
-            for (size_t i = 0; i < port.buttons.size(); ++i) {
-                if (static_cast<int>(i) != ta && static_cast<int>(i) != tb) {
-                    port.buttons[i] = 0;
-                }
-            }
+            std::fill(port.buttons.begin(), port.buttons.end(), 0);
             std::fill(port.coords.begin(), port.coords.end(), 0);
             std::fill(port.rel.begin(), port.rel.end(), 0);
         }
@@ -471,6 +464,7 @@ struct NestopiaVitaCoreBridge::Impl {
             return;
         }
 
+        const bool turbo_pulse = (turbo_counter % 3U) == 0U;
         const bool press_a = (player.buttons & Input::Button::B) != 0;
         const bool press_b = (player.buttons & Input::Button::A) != 0;
         const bool press_turbo_a = (player.buttons & Input::Button::Y) != 0;
@@ -482,22 +476,10 @@ struct NestopiaVitaCoreBridge::Impl {
         set_button(port, "Right", (player.buttons & Input::Button::Right) != 0);
         set_button(port, "Select", (player.buttons & Input::Button::Select) != 0);
         set_button(port, "Start", (player.buttons & Input::Button::Start) != 0);
-        set_button(port, "A", press_a);
-        set_button(port, "B", press_b);
-
-        // Use core's built-in turbo: set to 1 when first pressed,
-        // let the core count up to TURBORATE then pulse the button.
-        // clear_inputs() preserves these values across frames.
-        const int ta = find_button_index(port, "TurboA");
-        const int tb = find_button_index(port, "TurboB");
-        if (ta >= 0) {
-            if (!press_turbo_a) port.buttons[ta] = 0;
-            else if (port.buttons[ta] == 0) port.buttons[ta] = 1;
-        }
-        if (tb >= 0) {
-            if (!press_turbo_b) port.buttons[tb] = 0;
-            else if (port.buttons[tb] == 0) port.buttons[tb] = 1;
-        }
+        set_button(port, "A", press_a || (press_turbo_a && turbo_pulse));
+        set_button(port, "B", press_b || (press_turbo_b && turbo_pulse));
+        set_button(port, "TurboA", false);
+        set_button(port, "TurboB", false);
     }
 
     void exec_frame(Input::Player *players, unsigned int turbo_counter) {
