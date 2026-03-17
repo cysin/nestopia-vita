@@ -270,8 +270,9 @@ struct NestopiaVitaCoreBridge::Impl {
         rewind_blocked_until_release = true;
         rewind_state = JG_REWIND_STOPPED;
         if (jg_rewind_enable(1)) {
-            jg_rewind_enable_sound(1);
-            printf("nestopia: rewind enabled\n");
+            jg_rewind_enable_sound(0);
+            jg_rewind_set_speed(1);
+            printf("nestopia: rewind enabled (2x speed)\n");
         } else {
             printf("nestopia: rewind enable failed\n");
         }
