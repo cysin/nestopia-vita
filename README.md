@@ -2,6 +2,8 @@
 
 A standalone NES emulator for PlayStation Vita, powered by the [Nestopia](https://github.com/cysin/nestopia) emulation core.
 
+![Nestopia Vita](data/vita/romfs/sce_sys/pic0.png)
+
 ## Features
 
 - Full-speed NES emulation on PS Vita
