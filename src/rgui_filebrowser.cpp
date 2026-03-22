@@ -179,14 +179,19 @@ void RguiFileBrowser::restoreCurrentState() {
     }
 
     int selectedIndex = it->second.selected_index;
+    int scrollOffset = it->second.scroll_offset;
+
     if (!it->second.selected_entry_name.empty()) {
         int nameIndex = getEntryIndexByName(it->second.selected_entry_name);
         if (nameIndex >= 0) {
             selectedIndex = nameIndex;
+            // Center the selection in the visible area
+            int visible = m_menu->getVisibleRowCount();
+            scrollOffset = std::max(0, selectedIndex - visible / 2);
         }
     }
 
-    m_menu->setSelectionState(selectedIndex, it->second.scroll_offset);
+    m_menu->setSelectionState(selectedIndex, scrollOffset);
 }
 
 void RguiFileBrowser::updateJumpTargets() {
@@ -417,9 +422,16 @@ std::string RguiFileBrowser::getCurrentPath() const {
     return m_current_path;
 }
 
-void RguiFileBrowser::setPath(const std::string &path) {
+void RguiFileBrowser::setPath(const std::string &path, const std::string &selectName) {
     std::string normalized = normalizeDirectoryPath(path);
     m_current_path = normalized.empty() ? m_root_path : normalized;
     m_quick_jump_active = false;
+
+    // Seed directory state so the cursor lands on selectName after refresh
+    if (!selectName.empty() && m_directory_states.find(m_current_path) == m_directory_states.end()) {
+        DirectoryState &state = m_directory_states[m_current_path];
+        state.selected_entry_name = selectName;
+    }
+
     refreshList();
 }

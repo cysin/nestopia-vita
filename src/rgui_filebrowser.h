@@ -27,7 +27,7 @@ public:
     std::string getSelectedPath() const;
     std::string getCurrentPath() const;
 
-    void setPath(const std::string &path);
+    void setPath(const std::string &path, const std::string &selectName = {});
 
 private:
     struct DirectoryState {
